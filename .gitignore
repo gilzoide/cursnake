@@ -1,0 +1,8 @@
+# ignore hiscore [we actually won't need it, right]
+HiScore
+# ignore the 2.c
+cursnake2.c
+# ignore the executable
+a.out
+# ignore text backups
+*~

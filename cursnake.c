@@ -12,8 +12,7 @@
 #define FGred 3
 #define FGyellow 4
 #define BGhelp 5
-#define FGdeath 7
-#define BGboom 8
+#define BGboom 6
 
 #define HEIGHT 22
 #define WIDTH 60
@@ -241,6 +240,118 @@ void ThrowFood (WINDOW *field)
 }
 
 
+/* See if beat the Hi Score, if yes: write it, else: show the 3 firsts */
+void HiScore ()
+{
+	FILE *f;
+	char names[3][19] = {"", "", ""};	// names of the hiscorers
+	int hi[3] = {0, 0, 0}, i;	// hiscores
+	char new[19];	// name of the new hiscorer
+
+	if ((f = fopen ("HiScore", "r+")) == NULL) {
+		fclose (f);
+		f = fopen ("HiScore", "a");
+	}
+
+// get the names and hiscores from the HiScore file
+	while (!feof (f)) {
+		for (i = 0; i < 3; i++) {
+			fread (names[i], sizeof (char), 19, f);
+			fread (&hi[i], sizeof (int), 1, f);
+		}
+	}
+
+	flushinp ();
+	attrset (COLOR_PAIR (0));
+	nodelay (stdscr, FALSE);
+
+// player achieved a Hi Score!
+	if (score > hi[2]) {
+		echo ();
+		nocbreak ();
+		curs_set (1);
+
+		attron (A_BOLD);
+		mvaddstr (FIELD_y0 + HEIGHT, COLS/2 - 25, "New HiScore! Your name, please > ");
+		attroff (A_BOLD);
+		getnstr (new, 18);
+		new[18] = 0;
+
+// n° 1
+		if (score > hi[0]) {
+			fseek (f, 0, SEEK_SET);
+// rewrite the file with the new entry, and push the other ones
+			fwrite (new, sizeof (char), 19, f);
+			fwrite (&score, sizeof (int), 1, f);
+
+			fwrite (names[0], sizeof (char), 19, f);
+			fwrite (&hi[0], sizeof (int), 1, f);
+
+			fwrite (names[1], sizeof (char), 19, f);
+			fwrite (&hi[1], sizeof (int), 1, f);
+// rewrite the values
+			strcpy (names[2], names[1]);
+			hi[2] = hi[1];
+			strcpy (names[1], names[0]);
+			hi[1] = hi[0];
+			strcpy (names[0], new);
+			hi[0] = score;
+		}
+// n° 2
+		else if (score > hi[1]) {
+			fseek (f, (19 * sizeof (char) + sizeof (int)), SEEK_SET);
+// rewrite the file with the new entry [leave n°1 intact], and push the other ones
+			fwrite (new, sizeof (char), 19, f);
+			fwrite (&score, sizeof (int), 1, f);
+
+			fwrite (names[1], sizeof (char), 19, f);
+			fwrite (&hi[1], sizeof (int), 1, f);
+// rewrite the values
+			strcpy (names[2], names[1]);
+			hi[2] = hi[1];
+			strcpy (names[1], new);
+			hi[1] = score;
+		}
+// n° 3
+		else {
+			fseek (f, 2 * (19 * sizeof (char) + sizeof (int)), SEEK_SET);
+// rewrite the file with the new entry [leave n°1 and n°2 intact]
+			fwrite (new, sizeof (char), 19, f);
+			fwrite (&score, sizeof (int), 1, f);
+// rewrite the last value
+			strcpy (names[2], new);
+			hi[2] = score;
+		}
+
+		move (FIELD_y0 + HEIGHT, 0);
+		clrtoeol ();
+
+		curs_set (0);
+		cbreak ();
+		noecho ();
+	}
+
+	fclose (f);
+
+	attron (A_BOLD);
+	mvaddstr (FIELD_y0 + HEIGHT - 1, COLS/2 - 5, " HI SCORE ");
+	mvprintw (FIELD_y0 + HEIGHT, COLS/2 - 40, "1.", names[0], hi[0]);
+	mvprintw (FIELD_y0 + HEIGHT, COLS/2 - 12, "2.", names[1], hi[1]);
+	mvprintw (FIELD_y0 + HEIGHT, COLS/2 + 16, "3.", names[2], hi[2]);
+
+	attroff (A_BOLD);
+	mvprintw (FIELD_y0 + HEIGHT, COLS/2 - 38, "%s %d", names[0], hi[0]);
+	mvprintw (FIELD_y0 + HEIGHT, COLS/2 - 10, "%s %d", names[1], hi[1]);
+	mvprintw (FIELD_y0 + HEIGHT, COLS/2 + 18, "%s %d", names[2], hi[2]);
+
+	refresh ();
+
+	getch ();
+	nodelay (stdscr, TRUE);
+}
+
+
+
 /* You lost, sucka, sorry =P */
 void Loser (WINDOW *field, HEAD *head, BODY *tail)
 {
@@ -261,9 +372,8 @@ void Loser (WINDOW *field, HEAD *head, BODY *tail)
 		usleep (3e5);
 		wattroff (field, A_BOLD);
 		mvwaddch (field, tail->y, tail->x, tail->type);
-		wattron (field, COLOR_PAIR (FGdeath));
 		if (i > 0)
-			mvwaddch (field, aux->y, aux->x, aux->type);
+			mvwaddch (field, aux->y, aux->x, ' ');
 		aux = tail;
 		tail = tail->next;
 		i++;
@@ -310,6 +420,8 @@ void Loser (WINDOW *field, HEAD *head, BODY *tail)
 	}
 
 	usleep (1e6);
+
+	HiScore ();
 
 	dificulty = -1;
 }
@@ -948,7 +1060,6 @@ int main ()
 	init_pair (FGred, COLOR_RED, -1);	// red FG, for food/apple/dying
 	init_pair (FGyellow, COLOR_YELLOW, -1);	// yellow FG, for live stone
 	init_pair (BGhelp, COLOR_WHITE, COLOR_BLUE);	// blue BG for help window
-	init_pair (FGdeath, COLOR_BLACK, -1);
 	init_pair (BGboom, COLOR_YELLOW, COLOR_RED);
 
 	hud = subwin (stdscr, 1, COLS, 0, 0);
