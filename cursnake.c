@@ -1,3 +1,5 @@
+// Compile with '-lpanel -lncurses'
+
 #include <ncurses.h>
 #include <panel.h>
 
