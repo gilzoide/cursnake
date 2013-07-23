@@ -100,7 +100,7 @@ void Help ()
 	mvwaddstr (help, 6, 4, "food: eat it for some points");
 	mvwaddstr (help, 8, 6, "apple: eat it with both heads for 500 points!");
 	mvwaddstr (help, 10, 4, "K stands for Hunter: it'll try to kill you!");
-// but actually you need to spend 500 - (dificulty + 1) points in it, so is it worth it? xP
+	// but actually you need to spend 500 - (dificulty + 1) points in it, so is it worth it? xP
 
 
 // writes the help window, wait for some key to be pressed and delete the help window
@@ -249,20 +249,22 @@ void HiScore ()
 	char names[3][19] = {"", "", ""};	// names of the hiscorers
 	int hi[3] = {0, 0, 0}, i;	// hiscores
 	char new[19];	// name of the new hiscorer
-
+	
+	system ("if ! [ -f \"HiScore\" ]; then touch HiScore; fi");
 	if ((f = fopen ("HiScore", "r+")) == NULL) {
-		fclose (f);
-		f = fopen ("HiScore", "a");
+		return;
 	}
 
-// get the names and hiscores from the HiScore file
-	else while (!feof (f)) {
-		for (i = 0; i < 3; i++) {
-			fread (names[i], sizeof (char), 19, f);
-			fread (&hi[i], sizeof (int), 1, f);
+// there is a hiscore file
+	else
+	// get the names and hiscores from the HiScore file
+		while (!feof (f)) {
+			for (i = 0; i < 3; i++) {
+				fread (names[i], sizeof (char), 19, f);
+				fread (&hi[i], sizeof (int), 1, f);
+			}
 		}
-	}
-
+	
 	flushinp ();
 	attrset (COLOR_PAIR (0));
 	nodelay (stdscr, FALSE);
@@ -282,7 +284,7 @@ void HiScore ()
 // n° 1
 		if (score > hi[0]) {
 			fseek (f, 0, SEEK_SET);
-// rewrite the file with the new entry, and push the other ones
+	// rewrite the file with the new entry, and push the other ones
 			fwrite (new, sizeof (char), 19, f);
 			fwrite (&score, sizeof (int), 1, f);
 
@@ -291,7 +293,7 @@ void HiScore ()
 
 			fwrite (names[1], sizeof (char), 19, f);
 			fwrite (&hi[1], sizeof (int), 1, f);
-// rewrite the values
+	// rewrite the values
 			strcpy (names[2], names[1]);
 			hi[2] = hi[1];
 			strcpy (names[1], names[0]);
@@ -302,13 +304,13 @@ void HiScore ()
 // n° 2
 		else if (score > hi[1]) {
 			fseek (f, (19 * sizeof (char) + sizeof (int)), SEEK_SET);
-// rewrite the file with the new entry [leave n°1 intact], and push the other ones
+	// rewrite the file with the new entry [leave n°1 intact], and push the other ones
 			fwrite (new, sizeof (char), 19, f);
 			fwrite (&score, sizeof (int), 1, f);
 
 			fwrite (names[1], sizeof (char), 19, f);
 			fwrite (&hi[1], sizeof (int), 1, f);
-// rewrite the values
+	// rewrite the values
 			strcpy (names[2], names[1]);
 			hi[2] = hi[1];
 			strcpy (names[1], new);
@@ -317,10 +319,10 @@ void HiScore ()
 // n° 3
 		else {
 			fseek (f, 2 * (19 * sizeof (char) + sizeof (int)), SEEK_SET);
-// rewrite the file with the new entry [leave n°1 and n°2 intact]
+	// rewrite the file with the new entry [leave n°1 and n°2 intact]
 			fwrite (new, sizeof (char), 19, f);
 			fwrite (&score, sizeof (int), 1, f);
-// rewrite the last value
+	// rewrite the last value
 			strcpy (names[2], new);
 			hi[2] = score;
 		}
