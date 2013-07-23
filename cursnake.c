@@ -256,7 +256,7 @@ void HiScore ()
 	}
 
 // get the names and hiscores from the HiScore file
-	while (!feof (f)) {
+	else while (!feof (f)) {
 		for (i = 0; i < 3; i++) {
 			fread (names[i], sizeof (char), 19, f);
 			fread (&hi[i], sizeof (int), 1, f);
@@ -502,7 +502,7 @@ BODY *Grow (WINDOW *field, BODY *tail)
 
 
 /* Check collision → 0 for nothing, 1 for deadly hit, 2 for eating, -1 for losing 2nd head */
-int Hit (WINDOW *field, char c_head, char c_appendix)
+int Hit (char c_head, char c_appendix)
 {
 // 2 heads
 	if (c_appendix) {
@@ -534,6 +534,8 @@ int Hit (WINDOW *field, char c_head, char c_appendix)
 				return 2;
 		}
 	}
+
+	return 0;
 }
 
 
@@ -571,7 +573,7 @@ void Switch (WINDOW *field, HEAD *head, BODY *tail)
 
 	c_appendix = mvwinch (field, head->appendix_y, head->appendix_x);
 
-	switch (Hit (field, 0, c_appendix)) {
+	switch (Hit (0, c_appendix)) {
 		case -1:
 			OneHead (field, head);
 			return;
@@ -792,7 +794,7 @@ BODY *MoveSnake (WINDOW *field, HEAD *head, BODY *tail)
 	else
 		c_appendix = 0;
 
-	switch (Hit (field, c_head, c_appendix)) {
+	switch (Hit (c_head, c_appendix)) {
 		case 1:
 			Loser (field, head, tail);
 			return tail;
@@ -950,7 +952,7 @@ void Turn (WINDOW *field, HEAD *head, BODY *tail, char turn_to)
 	else
 		c_appendix = 0;
 
-	switch (Hit (field, c_head, c_appendix)) {
+	switch (Hit (c_head, c_appendix)) {
 		case 1:
 			Loser (field, head, tail);
 			return;
@@ -1025,7 +1027,7 @@ BEGIN:
 		}
 	}
 
-	if (y_dist == head.y - live_y && x_dist == head.x - live_x) {
+	if (y_dist == head.y - live_y && x_dist == head.x - live_x && !anyway) {
 		anyway = 1;
 		goto BEGIN;
 	}
@@ -1094,7 +1096,7 @@ int main ()
 		if (turned == 1)
 			turned = 2;	// can't turn, but move
 
-		if (c = getch ()) {
+		if ((c = getch ())) {
 // flush input buffer: for no tilt on holding a button; only if got something in getch ()
 			flushinp ();
 		}
