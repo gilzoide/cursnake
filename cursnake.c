@@ -262,6 +262,14 @@ void HiScore ()
 			fread (&hi[i], sizeof (int), 1, f);
 		}
 	}
+
+// get the names and hiscores from the HiScore file
+	while (!feof (f)) {
+		for (i = 0; i < 3; i++) {
+			fread (names[i], sizeof (char), 19, f);
+			fread (&hi[i], sizeof (int), 1, f);
+		}
+	}
 	
 	flushinp ();
 	attrset (COLOR_PAIR (0));
