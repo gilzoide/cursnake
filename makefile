@@ -1,7 +1,10 @@
 # Cursnake!
 
 main : cursnake.c
-	gcc -lpanel -lncurses -lform cursnake.c -o snake
+	@cc -lpanel -lncurses -lform cursnake.c -o snake
+
+run : cursnake.c snake
+	@./snake
 
 commit : .git
-	git commit -a && git push
+	@git commit -a && git push
